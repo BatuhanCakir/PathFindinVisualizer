@@ -1,0 +1,26 @@
+.node{
+
+     width: 40px;
+    height: 40px;
+    outline: 0.5px solid rgb(175, 216, 248);
+    margin-bottom: -3px;
+    display: inline-block;
+}
+.node-empty{
+    background-color: white;
+}
+.node-start{
+    background-color: blue;
+}
+.node-finish{
+    background-color: black;
+}
+.node-wall{
+    background-color: aqua;
+}
+.node-visited{
+    background-color: darkgreen;
+}
+.node-shortest{
+    background-color: yellow;
+}
