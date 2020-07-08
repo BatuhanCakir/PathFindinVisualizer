@@ -13,6 +13,11 @@ export default class Pathfinding extends Component{
         this.state = {
             grid: [],
             mouseIsPressed: false,
+            algorithm:'',
+            visualizeButton : 'Visualize',
+            visualizing : false,
+            speed: 5,
+            boardClear : true,
         };
         this.myRef = React.createRef();
     }
@@ -21,13 +26,16 @@ export default class Pathfinding extends Component{
         this.setState({grid})
     }
     handleMouseDown(row, col) {
+
+        if (this.state.visualizing) return
         const newGrid = getNewGridWithWallToggled(this.state.grid, row, col);
         this.setState({grid: newGrid, mouseIsPressed: true});
 
     }
 
     handleMouseEnter(row, col) {
-        if (!this.state.mouseIsPressed) return;
+
+        if (!this.state.mouseIsPressed || this.state.visualizing) return;
         const newGrid = getNewGridWithWallToggled(this.state.grid, row, col);
         this.setState({grid: newGrid});
     }
@@ -49,9 +57,6 @@ export default class Pathfinding extends Component{
         const startNode = grid[START_NODE_ROW][START_NODE_COL];
         const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
         const visitedNodesInOrder = dfs(grid, startNode, finishNode);
-        console.log(visitedNodesInOrder[0])
-        console.log(visitedNodesInOrder[1])
-        console.log(visitedNodesInOrder[2])
         var shortestPathNodes = this.shortestPath(startNode,finishNode)
         this.animateVisitedPath(visitedNodesInOrder,shortestPathNodes)
 
@@ -66,9 +71,11 @@ export default class Pathfinding extends Component{
 
                 document.getElementById(`node-${node.row}-${node.col}`).className =
                     'node node-shortest';}
-            }, 20 * i)
+            }, this.state.speed * i)
             if(i===shortestPathNodes.length-1){
                 this.updateState()
+
+                this.setState(this.setState({visualizing: false}))
             }
         }
     }
@@ -86,18 +93,23 @@ export default class Pathfinding extends Component{
                  }
 
 
-             }, 20 * i);
+             }, this.state.speed * i);
              if (i === visitedNodesInOrder.length - 1) {
                  setTimeout(() => {
                      this.visualizeShortestPath(shortestPathNodes);
-                 }, 20 * i);
+                 }, this.state.speed * i);
                  return;
              }
 
          }
     }
     clearBoard(grid){
-        this.updateState()
+        if (this.state.visualizing) return
+        this.clearObject(grid,'wall')
+        this.clearObject(grid,'visited')
+        this.clearObject(grid,'shortest')
+    }
+    clearObject(grid,block){
         const newGrid = grid.slice()
 
         for (var row = 0; row < this.state.grid.length;row ++){
@@ -108,8 +120,10 @@ export default class Pathfinding extends Component{
                     type = 'start'
                 }else if(node.type === 'end') {
                     type = 'end'
-                }else{
+                }else if(node.type === block){
                     type = 'empty';
+                } else {
+                    type = node.type;
                 }
                 const newNode = {
                     ...node,
@@ -123,13 +137,7 @@ export default class Pathfinding extends Component{
 
             }
         }
-        newGrid[START_NODE_ROW][START_NODE_COL].type= 'start'
-        newGrid[FINISH_NODE_ROW][FINISH_NODE_COL].type= 'end'
-
-        document.getElementById(`node-${START_NODE_ROW}-${START_NODE_COL}`).className= 'node node-start'
-        document.getElementById(`node-${FINISH_NODE_ROW}-${ FINISH_NODE_COL}`).className= 'node node-finish'
         this.setState({grid: newGrid});
-
     }
     shortestPath(startpoint ,endpoint) {
         var  shortestPath = []
@@ -177,21 +185,66 @@ export default class Pathfinding extends Component{
         this.setState({grid: newGrid});
 
     }
+    onChangeAlgorithm(e) {
+        this.setState({algorithm: e.target.value}) ;
+        this.setState({visualizeButton: 'Visualize ' + e.target.value})
+
+    }
+    onChangeSpeed(e) {
+        this.setState({speed: parseInt(e.target.value)}) ;
 
 
+
+    }
+    visualize(){
+        if (this.state.visualizing) return
+        const algorithm = this.state.algorithm
+        if (algorithm === 'BFS'){
+            this.setState({visualizing: true});
+            this.checkBlocks()
+            this.setState({boardClear: false});
+            this.visualizeBFS()
+        }else if(algorithm === 'DFS'){
+            this.checkBlocks()
+            this.setState({visualizing: true})
+            this.visualizeDFS()
+        }else {
+            this.setState({visualizeButton: 'Pick an algorithm'})
+        }
+
+    }
+    checkBlocks(){
+        if (!this.state.boardClear){
+            this.clearObject(this.state.grid,'shortest')
+            this.clearObject(this.state.grid,'visited')
+            this.setState({boardClear: true});
+        }
+        this.setState({boardClear: false});
+    }
     render() {
       const {grid,mouseIsPressed} = this.state
         return (
             <>
-                <button onClick={() => this.visualizeBFS()}>
-                    Visualize Breadth First Search
+                <select className="form-control"onChange={this.onChangeAlgorithm.bind(this)}>
+                    <option value="">Pick an Algorithm</option>
+                    <option value="BFS">Breadth First Search</option>
+                    <option value="DFS">Depth First Search</option>
+                </select>
+
+
+                <button onClick={() => this.visualize()}>
+                    {this.state.visualizeButton}
                 </button>
-                <button onClick={() => this.visualizeDFS()}>
-                    Visualize Depth First Search
-                </button>
+
                 <button onClick={() => this.clearBoard(grid)}>
                     Clear Board
                 </button>
+                <select className="form-control"onChange={this.onChangeSpeed.bind(this)} defaultValue={"5"} >
+                    <option value="2">Really Fast</option>
+                    <option value="5" >Fast</option>
+                    <option value="10">Medium</option>
+                    <option value="20">Slow</option>
+                </select>
                 <div className="grid"  ref={this.myRef}>
                     {grid.map((row, rowIdx) => {
                         return (
@@ -256,12 +309,15 @@ const getNewGridWithWallToggled = (grid, row, col) => {
     const newGrid = grid.slice();
     const node = newGrid[row][col];
     let type;
-    if (node.type === 'wall'){
+    if(node.type === 'start'){
+        type  ='start'
+    }else if(node.type === 'end'){
+        type  ='end'
+    }
+    else if (node.type === 'wall'){
         type  ='empty'
-    }else if(node.type === 'empty'){
-        type = 'wall'
     }else {
-        type = node.type
+        type = 'wall'
     }
     const newNode = {
         ...node,

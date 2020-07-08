@@ -5,14 +5,14 @@ module.exports = {
         var dy=[-1,0,1,0]
         var dx =[0,1,0,-1]
         var visitedNodesinOrder = []
-
+        var curNode = null
 var stack = [];
         stack.push(startNode)
         while (stack.length >0){
             var temp = stack.pop()
             temp.previousNode = curNode
             temp.isVisited = true;
-            var curNode =  temp
+            curNode =  temp
             visitedNodesinOrder.push(curNode)
             if( curNode.type ==='end') return visitedNodesinOrder
 
