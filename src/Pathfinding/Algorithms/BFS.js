@@ -28,17 +28,7 @@ bfs :function (grid, startNode, finishNode){
 }
 return visitedNodesinOrder
 
-},shortestPath : function (startpoint ,endpoint) {
-       var  shortestPath = []
-        var temp = endpoint
-        if (endpoint.previousNode === null) return shortestPath
-        while(!(startpoint.row === temp.row && startpoint.col === temp.col) ){
-           shortestPath.push(temp)
-            temp = temp.previousNode;
-        }
-        shortestPath.push(startpoint)
-        return shortestPath
-    }
+}
 
 }
 function isValid(row,col,grid) {

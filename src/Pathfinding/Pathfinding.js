@@ -1,7 +1,8 @@
 import React,{Component} from "react";
 import Node from './Node/Node'
 import './Pathfinding.css'
-import {bfs,shortestPath} from './Algorithms/BFS'
+import {bfs} from './Algorithms/BFS'
+import {dfs} from './Algorithms/DFS'
 const START_NODE_ROW = 7;
 const START_NODE_COL = 10;
 const FINISH_NODE_ROW = 7;
@@ -39,11 +40,23 @@ export default class Pathfinding extends Component{
         const startNode = grid[START_NODE_ROW][START_NODE_COL];
         const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
         const visitedNodesInOrder = bfs(grid, startNode, finishNode);
-        var shortestPathNodes = shortestPath(startNode,finishNode)
-        this.animateBFS(visitedNodesInOrder,shortestPathNodes)
+        var shortestPathNodes = this.shortestPath(startNode,finishNode)
+        this.animateVisitedPath(visitedNodesInOrder,shortestPathNodes)
 
     }
-    visualizeShortestBFS(shortestPathNodes) {
+    visualizeDFS() {
+        const {grid} = this.state
+        const startNode = grid[START_NODE_ROW][START_NODE_COL];
+        const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
+        const visitedNodesInOrder = dfs(grid, startNode, finishNode);
+        console.log(visitedNodesInOrder[0])
+        console.log(visitedNodesInOrder[1])
+        console.log(visitedNodesInOrder[2])
+        var shortestPathNodes = this.shortestPath(startNode,finishNode)
+        this.animateVisitedPath(visitedNodesInOrder,shortestPathNodes)
+
+    }
+    visualizeShortestPath(shortestPathNodes) {
         if(shortestPathNodes.length ===0) this.updateState()
         for (let i = 0; i < shortestPathNodes.length; i++) {
             setTimeout(() => {
@@ -53,13 +66,13 @@ export default class Pathfinding extends Component{
 
                 document.getElementById(`node-${node.row}-${node.col}`).className =
                     'node node-shortest';}
-            }, 2 * i)
+            }, 20 * i)
             if(i===shortestPathNodes.length-1){
                 this.updateState()
             }
         }
     }
-    animateBFS(visitedNodesInOrder,shortestPathNodes){
+    animateVisitedPath(visitedNodesInOrder, shortestPathNodes){
 
          for (let i = 0; i < visitedNodesInOrder.length; i++) {
 
@@ -73,11 +86,11 @@ export default class Pathfinding extends Component{
                  }
 
 
-             }, 2 * i);
+             }, 20 * i);
              if (i === visitedNodesInOrder.length - 1) {
                  setTimeout(() => {
-                     this.visualizeShortestBFS(shortestPathNodes);
-                 }, 2 * i);
+                     this.visualizeShortestPath(shortestPathNodes);
+                 }, 20 * i);
                  return;
              }
 
@@ -117,6 +130,17 @@ export default class Pathfinding extends Component{
         document.getElementById(`node-${FINISH_NODE_ROW}-${ FINISH_NODE_COL}`).className= 'node node-finish'
         this.setState({grid: newGrid});
 
+    }
+    shortestPath(startpoint ,endpoint) {
+        var  shortestPath = []
+        var temp = endpoint
+        if (endpoint.previousNode === null) return shortestPath
+        while(!(startpoint.row === temp.row && startpoint.col === temp.col) ){
+            shortestPath.push(temp)
+            temp = temp.previousNode;
+        }
+        shortestPath.push(startpoint)
+        return shortestPath
     }
     checkStartEnd(row,col){
         if ((row === START_NODE_ROW && col === START_NODE_COL) ){
@@ -161,6 +185,9 @@ export default class Pathfinding extends Component{
             <>
                 <button onClick={() => this.visualizeBFS()}>
                     Visualize Breadth First Search
+                </button>
+                <button onClick={() => this.visualizeDFS()}>
+                    Visualize Depth First Search
                 </button>
                 <button onClick={() => this.clearBoard(grid)}>
                     Clear Board
