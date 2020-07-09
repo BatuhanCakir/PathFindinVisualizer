@@ -62,7 +62,10 @@ export default class Pathfinding extends Component{
 
     }
     visualizeShortestPath(shortestPathNodes) {
-        if(shortestPathNodes.length ===0) this.updateState()
+        if(shortestPathNodes.length ===0) {
+            this.updateState()
+            this.setState(this.setState({visualizing: false}))
+        }
         for (let i = 0; i < shortestPathNodes.length; i++) {
             setTimeout(() => {
 
@@ -221,30 +224,43 @@ export default class Pathfinding extends Component{
         }
         this.setState({boardClear: false});
     }
+
     render() {
       const {grid,mouseIsPressed} = this.state
         return (
             <>
-                <select className="form-control"onChange={this.onChangeAlgorithm.bind(this)}>
-                    <option value="">Pick an Algorithm</option>
+                <header>
+                    <nav>
+                 <p>PATHFINDING VISUALIZER</p>
+                <select className="algorithm"onChange={this.onChangeAlgorithm.bind(this)} defaultValue={""}>
+                    <option value=""  disabled style={{display:"none"}}>Algorithm</option>
                     <option value="BFS">Breadth First Search</option>
                     <option value="DFS">Depth First Search</option>
                 </select>
 
 
-                <button onClick={() => this.visualize()}>
-                    {this.state.visualizeButton}
-                </button>
+
 
                 <button onClick={() => this.clearBoard(grid)}>
                     Clear Board
                 </button>
-                <select className="form-control"onChange={this.onChangeSpeed.bind(this)} defaultValue={"5"} >
-                    <option value="2">Really Fast</option>
-                    <option value="5" >Fast</option>
-                    <option value="10">Medium</option>
-                    <option value="20">Slow</option>
+                <button onClick={() => this.clearObject(grid,'wall')}>
+                    Clear Walls
+                </button>
+                <button onClick={() => {this.clearObject(grid,'visited') ;this.clearObject(grid,'shortest')}}>
+                    Clear Path
+                </button>
+                        <button  className='Visualize' onClick={() => this.visualize()}>
+                            {this.state.visualizeButton}
+                        </button>
+                <select id="speed" onChange={this.onChangeSpeed.bind(this)} defaultValue={"5"} >
+                    <option value="2">Speed: Really Fast</option>
+                    <option value="5" >Speed: Fast</option>
+                    <option value="10">Speed: Medium</option>
+                    <option value="20">Speed: Slow</option>
                 </select>
+                    </nav>
+                </header>
                 <div className="grid"  ref={this.myRef}>
                     {grid.map((row, rowIdx) => {
                         return (
